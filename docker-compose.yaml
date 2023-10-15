@@ -6,8 +6,6 @@ services:
       image: redis
       command: "redis-server --requirepass foobared"
       restart: always
-      env_file:
-        - ./redis/.env
       volumes:
         - ./redis:/data
       ports:

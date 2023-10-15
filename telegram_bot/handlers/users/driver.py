@@ -197,10 +197,10 @@ async def new_order_callback_handler(
     if callback_data[CB_ACTION] == DECLINE_ORDER:
         # Если водитель нажал "Отказаться от заказа"
         await callback.message.delete()
-        result = await core.analytics_driver_order_not_approved(order_id=int(callback_data[CB_ORDER_ID]),
+        block_data = await core.analytics_driver_order_not_approved(order_id=int(callback_data[CB_ORDER_ID]),
                                                                 chat_id=callback.from_user.id)
-        
-        
+        if block_data["detail"].get("is_block", False):
+            await callback.message.answer(block_data["detail"]["message"])
 
     elif callback_data[CB_ACTION] == ACCEPT_ORDER:
         # Если водитель нажал "Принять заказ"

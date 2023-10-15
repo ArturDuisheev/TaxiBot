@@ -46,6 +46,7 @@ class CustomUserAdmin(UserAdmin):
 
 
 admin.site.register(models.User, CustomUserAdmin)
+admin.site.register(models.Driver)
 admin.site.register(models.TelegramData)
 admin.site.register(models.Balance)
 admin.site.register(models.Ban)

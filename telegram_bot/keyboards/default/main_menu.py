@@ -37,3 +37,14 @@ async def main_menu_keyboard(user: User) -> ReplyKeyboardMarkup:
         keyboard.add(KeyboardButton(DRIVER_CABINET))
     keyboard.add(KeyboardButton(CONTACT_DATA))
     return keyboard
+
+
+
+async def register_keyboard():
+    
+    keyboard = ReplyKeyboardMarkup(
+        row_width=1, resize_keyboard=True, one_time_keyboard=True
+    )
+    keyboard.add(KeyboardButton("Я клиент"))
+    keyboard.add(KeyboardButton("Я водитель"))
+    return keyboard

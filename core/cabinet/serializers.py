@@ -53,6 +53,22 @@ class DriverSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+
+class DriverRegisterSerializer(serializers.ModelSerializer):
+    car = CarSerializer()
+    
+    class Meta:
+        model = models.Driver
+        fields = "__all__"
+
+    def create(self, validated_data):
+        brand_car = models.CarBrand.objects.create(**validated_data["car"].pop("brand"))
+        car = models.Car.objects.create(**validated_data.pop("car"), brand_id=brand_car.id)
+
+        instance = models.Driver.objects.create(**validated_data, car_id=car.id)
+        return instance
+
+
 class WorkDriverDaySerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
@@ -77,6 +93,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_telegram_auth_token(self, instance):
         return instance.telegram_auth_token.key
+
+
+
+
+
 
 
 class RegisterFromTelegramSerializer(serializers.ModelSerializer):

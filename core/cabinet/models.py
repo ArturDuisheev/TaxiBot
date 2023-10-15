@@ -317,7 +317,7 @@ class Driver(models.Model):
         verbose_name="Номер телефона водителя", help_text="Может начинаться только с +7"
     )
     photo = models.ImageField(
-        upload_to=DRIVER_PHOTO_UPLOAD_TO, verbose_name="Фотография водителя"
+        upload_to=DRIVER_PHOTO_UPLOAD_TO, verbose_name="Фотография водителя", blank=True, null=True
     )
     time_blocked_message_order = models.DateTimeField(null=True, blank=True)
     

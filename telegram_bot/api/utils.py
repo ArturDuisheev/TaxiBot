@@ -120,7 +120,6 @@ async def check_response(response: aiohttp.ClientResponse) -> bool:
     elif response.status == 400:
         raise BadCoreRequest(await response.json())
     else:
-        print(await response.json(), 33333)
         raise CoreError(await response.json())
 
 

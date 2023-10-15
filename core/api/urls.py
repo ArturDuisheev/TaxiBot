@@ -1,4 +1,5 @@
 from cabinet.api import (
+    DriverRegisterAPI,
     GetAllSettingsAPIView,
     GetOrCreateUserFromTelegramAPI,
     GetUserExtendedAPI,
@@ -29,6 +30,8 @@ from referral.api import get_present_from_order, pick_coupon_from_telegram
 
 urlpatterns = [
     path("users/registerFromTelegram/", RegisterUserFromTelegramAPI.as_view()),
+    path("users/registerDriver/", DriverRegisterAPI.as_view()),
+
     path(
         "users/getOrCreateUserFromTelegram/", GetOrCreateUserFromTelegramAPI.as_view()
     ),

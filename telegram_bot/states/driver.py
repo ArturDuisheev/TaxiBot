@@ -12,3 +12,15 @@ class DriverMenu(StatesGroup):
 class OrderStateDriver(StatesGroup):
 
     order_start = State()
+
+
+class DriverRegister(StatesGroup):
+    """
+    Регистрация водителя
+    """
+    car_brand = State()
+    car_number = State()
+    car_color = State()
+    phone_number = State()
+    photo = State()
+    baby_chair = State()

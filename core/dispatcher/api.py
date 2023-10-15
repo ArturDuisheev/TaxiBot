@@ -428,19 +428,26 @@ class DriverAnalyticsOrderAPIView(APIView):
                 except:
                     minute = 5
                     count = 5
-                if count >= user.driver.count_not_accepted + 1:
+                user.driver.order_not_accepted.add(order)
+                if count == user.driver.count_not_accepted + 1:
                     date = datetime.datetime.now() + datetime.timedelta(minutes=minute)
                     
                     user.driver.time_blocked_message_order = date
+                    date_str = date.strftime('%m/%d/%Y, %H:%M:%S')
+                    data = {"message":f"Вы заблокированны до {date_str}", "is_block": True}
+                    driver_not_accepted_clear.apply_async(kwargs={"driver_id": user.driver.id}, countdown= minute * 60)
+                elif count < user.driver.count_not_accepted + 1:
+                    if user.driver.time_blocked_message_order is None:
+                        date = datetime.datetime.now() + datetime.timedelta(minutes=minute)
+                    else:
+                        date = user.driver.time_blocked_message_order
                     date_str = date.strftime('%m/%d/%Y, %H:%M:%S')
                     data = {"message":f"Вы заблокированны до {date_str}", "is_block": True}
                 else:
                     
                     user.driver.count_not_accepted += 1
                     data = {"message":f"count not accepted: {user.driver.count_not_accepted}", "is_block": False}
-                user.driver.order_not_accepted.add(order)
                 user.driver.save()
-                driver_not_accepted_clear.apply_async(kwargs={"driver_id": user.driver.id}, countdown= minute * 60)
                 return JsonResponse({"detail": data}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({"detail": "order is not accepted"}, status=status.HTTP_400_BAD_REQUEST)

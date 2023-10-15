@@ -25,7 +25,7 @@ from . import models
 from .exceptions import USER_IS_REGISTERED
 from .models import Settings as CabinetSettings
 from .models import TelegramData
-from .serializers import RegisterFromTelegramSerializer
+from .serializers import DriverRegisterSerializer, RegisterFromTelegramSerializer
 from .serializers import SettingsSerializer as CabinetSettingsSerializer
 from .serializers import (
     TelegramDataSerializer,
@@ -60,6 +60,24 @@ class RegisterUserFromTelegramAPI(generics.GenericAPIView):
                 raise ParseError(USER_IS_REGISTERED.code)
             else:
                 raise ValidationError(serializer.errors)
+            
+
+class DriverRegisterAPI(APIView):
+
+
+    def post(self, request, *args, **kwargs):
+        chat_id = request.data.get("chat_id")
+        user = get_user_by_chat_id(chat_id)
+
+        serializer = DriverRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        driver = serializer.save()
+        driver.photo = user.telegram_data.photo
+        driver.save()
+        user.driver = driver
+        user.save()
+        return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+
 
 
 class GetOrCreateUserFromTelegramAPI(generics.GenericAPIView):

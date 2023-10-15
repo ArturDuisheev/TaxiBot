@@ -64,6 +64,25 @@ class UserAPIMethods:
             # Если пользователь уже создан или API недоступно
             return None
 
+    async def _create_driver(self, user_data: dict):
+        response = await post_request(
+            session=self.session,
+            url=self.base_url() + "users/registerDriver/",
+            json_data=user_data,
+            headers=self.headers,
+        )
+        return response
+
+
+    async def create_driver(self, user_data: dict) -> dict:
+        response = await self._create_driver(user_data=user_data)
+        if response.status == 201:
+            return True
+        else:
+            return False
+
+
+
     async def get_or_create_user(self, from_user: dict) -> User:
         """
             Возвращает данные пользователя из API
