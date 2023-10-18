@@ -451,3 +451,6 @@ class DriverAnalyticsOrderAPIView(APIView):
                 return JsonResponse({"detail": data}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({"detail": "order is not accepted"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        

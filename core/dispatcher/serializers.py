@@ -1,8 +1,9 @@
+from cabinet.models import Driver
 from referral.serializers import CouponSerializer
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 from rest_framework.exceptions import ParseError
-
+from rest_framework.validators import ValidationError
 from dispatcher.models import Order, OrderReview
 
 from .exceptions import CLIENT_ALREADY_HAS_ORDER, BadRequest
@@ -273,3 +274,4 @@ class SettingsSerializer(serializers.ModelSerializer):
 
 class SettingsOnlyWebAppMapCenterSerializer(serializers.Serializer):
     web_app_map_center = GeometryField()
+

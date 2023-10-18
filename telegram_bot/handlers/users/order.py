@@ -239,7 +239,6 @@ async def pick_start_location_handler(message: types.Message, state):
     
     sity = await get_sity_from_location(location=message.location)
     await message.answer("Адрес отправки получен!")
-    await message.answer(str(initialize_location(message.location)))
     await state.update_data(start_location=initialize_location(message.location))
 
     print("Start location: ", message.location)

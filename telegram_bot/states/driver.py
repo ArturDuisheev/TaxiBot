@@ -24,3 +24,8 @@ class DriverRegister(StatesGroup):
     phone_number = State()
     photo = State()
     baby_chair = State()
+    oferta = State()
+
+
+class DriverPayment(StatesGroup):
+    price = State()

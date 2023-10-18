@@ -12,7 +12,7 @@ DEBUG = 1
 BOT_TOKEN = "6052608761:AAHu8lHJ0ra9kPD5GdSLLjieRISEh5Ufeh4"  # Забираем значение типа str
 DADATA_TOKEN = "09aa69fe647bcfa4a7032a08123a9b9314366ea3"
 ADMINS = [860389338,805964909]  # Тут у нас будет список из админов
-
+PAY_TOKEN = "1744374395:TEST:4321f20feecaceec93c0"
 for i in range(len(ADMINS)):
     ADMINS[i] = int(ADMINS[i])
 

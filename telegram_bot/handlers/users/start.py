@@ -1,5 +1,5 @@
 from os import remove as remove_file
-
+from data.texts import OPEN_MAIN_MENU
 from aiogram.dispatcher import FSMContext
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
@@ -14,9 +14,66 @@ from utils.exceptions import UserIsRegistered
 
 
 @dp.message_handler(CommandStart(), state="*")
-async def bot_start(message: types.Message, state=None):
-    await message.answer(reply_markup=await register_keyboard(), text="Здравствуйте!, выберите вариант регистрации")
+async def bot_start(message: types.Message, state=FSMContext):
+    # Запрос на регистрацию пользователя
+    try:
+        user = await core.get_user_by_chat_id(chat_id=message.from_user.id)
+    except:
+        user = None
+    if user:
+        await message.answer('вы уже зарегистрированы')
+    else:
+        mentor, coupon = await parse_start_args(message.get_args())
+        if coupon:
+            coupon = await core.pick_coupon(
+                chat_id=message.from_user.id, coupon_code=coupon
+            )
+            await message.answer(f"Купон применен! {coupon.name}")
+            return
+        if state:
+            await state.finish()
+        photos = await bot.get_user_profile_photos(user_id=message.from_user.id, limit=1)
+        user_photo = (
+            await photos.photos[0][-1].download(ICONS_MEDIA_URL, make_dirs=True)
+            if len(photos.photos) > 0
+            else None
+        )
+        try:
+            user = await core.register_user(
+                user_data=message.from_user,
+                user_photo_path=user_photo.name if user_photo else None,
+                mentor_chat_id=mentor,
+            )
+        except UserIsRegistered:
+            user = None
+        if user:
+            text = START_NEW_USER.format(name=message.from_user.first_name)
+        else:
+            text = START_OLD_USER.format(name=message.from_user.first_name)
+        await message.answer_sticker(HELLO_STICKER_ID)
 
+        await message.answer('подтвердите ознакомление с офертой (Подтверждаю, Нет)')
+        await message.reply_document(open("data/static/oferta.doc", 'rb'))
+        await state.set_state(DriverRegister.oferta)
+
+        if user_photo:
+            remove_file(user_photo.name)
+    
+
+@dp.message_handler(state=DriverRegister.oferta)
+async def register(message: types.Message, state=FSMContext):
+    if message.text != 'Подтверждаю':
+        await message.answer('Без подтверждения ознакомления с офертой, мы не можем вас зарегистрировать')
+        await state.set_state(DriverRegister.oferta)
+        return
+    await state.finish()
+    user = await core.get_user_by_chat_id(chat_id=message.from_user.id)
+    keyboard = await main_menu_keyboard(user=user)
+    keyboard.add(types.KeyboardButton(
+            text="Я водитель"
+        ))
+    await message.answer(reply_markup=keyboard, text=OPEN_MAIN_MENU)
+    
 
 async def parse_start_args(args) -> 'Tuple["mentor", "coupon"]':
     if args.startswith("coupon"):
@@ -29,20 +86,22 @@ async def parse_start_args(args) -> 'Tuple["mentor", "coupon"]':
 
 @dp.message_handler(text="Я водитель")
 async def register_driver(message: types.Message, state="*"):
-    user = await core.get_user_by_chat_id(chat_id=message.from_user.id)
-    if user:
+    try:
+        user = await core.get_user_by_chat_id(chat_id=message.from_user.id)
+        is_driver = user.driver
+    except:
+        user = None
+        is_driver = None
+    print(is_driver, 123213)
+    if is_driver:
         await message.answer('вы уже зарегистрированы в качестве водителя')
-
-        await message.answer(reply_markup=await main_menu_keyboard(user=user), text="Главное меню")
     else:
-        await message.answer('молодец')
         await state.set_state(DriverRegister.car_brand)
         await message.answer('укажите бренд вашей машины')
 
 
 @dp.message_handler(state=DriverRegister.car_brand)
 async def register_driver(message: types.Message, state="*"):
-    await message.answer('молодец')
     await state.update_data(car_brand=message.text)
     await state.set_state(DriverRegister.car_number)
     await message.answer('укажите номер вашей машины')
@@ -50,7 +109,6 @@ async def register_driver(message: types.Message, state="*"):
 
 @dp.message_handler(state=DriverRegister.car_number)
 async def register_driver(message: types.Message, state="*"):
-    await message.answer('молодец')
     await state.update_data(car_number=message.text)
     await state.set_state(DriverRegister.car_color)
     await message.answer('укажите цвет вашей машины')
@@ -59,7 +117,6 @@ async def register_driver(message: types.Message, state="*"):
 
 @dp.message_handler(state=DriverRegister.car_color)
 async def register_driver(message: types.Message, state=FSMContext):
-    await message.answer('молодец')
     await state.update_data(car_color=message.text)
     await state.set_state(DriverRegister.phone_number)
     await message.answer('напишите ваш номер телефона в формате 79159999999')
@@ -67,12 +124,11 @@ async def register_driver(message: types.Message, state=FSMContext):
 
 @dp.message_handler(state=DriverRegister.phone_number)
 async def register_driver(message: types.Message, state=FSMContext):
-    await message.answer('молодец')
     try:
         int(message.text)
         if len(message.text) != 11 or message.text[0:2] != '79':
             await state.set_state(DriverRegister.phone_number)
-            await message.answer('не молодец')
+            await message.answer('неверный формат вашего номера телефона, укажите его еще раз')
         else:
 
             await state.update_data(phone_number=f'+{message.text}')
@@ -81,34 +137,38 @@ async def register_driver(message: types.Message, state=FSMContext):
     except:
 
         await state.set_state(DriverRegister.phone_number)
-        await message.answer('не молодец')
+        await message.answer('неверный формат вашего номера телефона, укажите его еще раз')
 
 
 
 
 @dp.message_handler(state=DriverRegister.baby_chair)
 async def register_driver(message: types.Message, state=FSMContext):
-    await message.answer('молодец')
     await state.update_data(baby_chair=message.text)
+    await message.answer('подтвердите ознакомление с офертой (Подтверждаю, Нет)')
+    await message.reply_document(open("data/static/oferta.doc", 'rb'))
     await state.set_state(DriverRegister.photo)
 
-@dp.message_handler(state=DriverRegister.photo, content_types=types.ContentType.ANY)
+@dp.message_handler(state=DriverRegister.photo)
 async def register_driver(message: types.Message, state=FSMContext):
+    if message.text != 'Подтверждаю':
+        await message.answer('Без подтверждения ознакомления с офертой, мы не можем вас зарегистрировать')
+        await state.set_state(DriverRegister.photo)
+        return
     data = await driver_data_state_to_data_core(await state.get_data())
+    await state.finish()
     data['chat_id'] = message.from_user.id
-    try:
-        status = await core.create_driver(
-            user_data=data,
-        )
-        if status:
-            await message.answer(f"Вы успешно зарегистрировались! {status}")
-            await state.finish()
-        else:
-            await message.answer(f"Регистрация не удалось. Попробуйте еще раз")
-            await state.finish()
-    except:
-        await state.finish()
-
+    status = await core.create_driver(
+        user_data=data,
+    )
+    if status:
+        await message.answer(f"Вы успешно зарегистрировались!")
+        user = await core.get_user_by_chat_id(chat_id=message.from_user.id)
+        await main_menu_handler(
+        message, state, pre_text="", user=user, base_text=""
+    )
+    else:
+        await message.answer(f"Регистрация не удалось. Попробуйте еще раз")
 
 
 
