@@ -195,6 +195,8 @@ class OrderReview(models.Model):
     text = models.TextField(
         max_length=1000, blank=True, null=True, verbose_name="Текст отзыва"
     )
+    client = models.ForeignKey(User, related_name='review_list', on_delete=models.CASCADE, blank=True, null=True)
+    driver = models.ForeignKey("cabinet.Driver", related_name='review_list', on_delete=models.CASCADE, blank=True, null=True)
 
     class Meta:
         verbose_name = "Отзыв на заказ"

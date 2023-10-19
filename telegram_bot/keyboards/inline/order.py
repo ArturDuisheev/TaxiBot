@@ -25,13 +25,14 @@ RECREATE_ORDER = "recreate_order"
 CREATE_ORDER_REVISION = "create_order_revision"
 CB_STATUS = "status"
 CB_STARS = "stars"
+IS_DRIVER = "is_driver"
 GIVE_REVIEW = "give_review"
 ORDER_ACTIONS = (ORDER_A_TAXI, ADD_COMMENT)
 
 client_cb = CallbackData("order_cb", CB_ORDER_ID, CB_ACTION)
 driver_cb = CallbackData("driver_cb", CB_ORDER_ID, CB_ACTION)
 update_status_cb = CallbackData("update_order_status", CB_ORDER_ID, CB_STATUS)
-review_cb = CallbackData("review_cb", CB_ORDER_ID, CB_STARS)
+review_cb = CallbackData("review_cb", CB_ORDER_ID, CB_STARS, IS_DRIVER)
 
 
 async def order_keyboard(order: Order) -> InlineKeyboardMarkup:
@@ -116,7 +117,12 @@ async def order_driver_keyboard(order: Order) -> InlineKeyboardMarkup:
         )
     elif order.status == RIDE_IS_FINISHED:
         # Когда поездка завершена
-        pass
+        keyboard.add(
+            InlineKeyboardButton(
+                text=RATE_RIDE,
+                callback_data=driver_cb.new(order_id=order.id, action=GIVE_REVIEW),
+            )
+        )
 
     return keyboard
 
@@ -130,7 +136,7 @@ async def cancel_order_driver_keyboard(order: Order) -> InlineKeyboardMarkup:
     return keyboard
 
 
-async def review_keyboard(order_id) -> InlineKeyboardMarkup:
+async def review_keyboard(order_id, is_driver=False) -> InlineKeyboardMarkup:
     """
     Возвращает клавиатуру для оценки заказа
     """
@@ -138,7 +144,7 @@ async def review_keyboard(order_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(row_width=1)
     buttons = (
         InlineKeyboardButton(
-            text="⭐️" * i, callback_data=review_cb.new(order_id=order_id, stars=i)
+            text="⭐️" * i, callback_data=review_cb.new(order_id=order_id, stars=i, is_driver=is_driver)
         )
         for i in reversed(range(1, 6))
     )

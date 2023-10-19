@@ -19,9 +19,12 @@ from keyboards.inline.order import (
     CB_ORDER_ID,
     CB_STATUS,
     DECLINE_ORDER,
+    GIVE_REVIEW,
     cancel_order_driver_keyboard,
     driver_cb,
     order_driver_keyboard,
+    order_keyboard,
+    review_keyboard,
     update_status_cb,
 )
 from loader import bot, core, dp, location_storage, qiwi
@@ -37,7 +40,7 @@ from models.dispatcher import (
 )
 from states import DriverMenu
 from states.driver import OrderStateDriver
-from states.order import OrderState
+from states.order import OrderReviewState, OrderState
 from utils.geolocator import getDistanceBetweenPointsNew
 from .order import open_order, update_order_in_storage
 
@@ -233,6 +236,18 @@ async def new_order_callback_handler(
         order: Order = await get_ride(driver_chat_id=callback.from_user.id, state=state)
         await cancel_order(order, status=ORDER_CANCELED_BY_DRIVER)
         await callback.message.edit_reply_markup(reply_markup=None)
+    
+    elif callback_data[CB_ACTION] == GIVE_REVIEW:
+        # Если пользователь нажал "Оценить поездку"
+        # TODO: Сделать систему принятия оценки за поездку
+        await OrderReviewState.pick_stars.set()
+        print(f"{callback_data=}")
+        await callback.message.edit_reply_markup(reply_markup=None)
+        await callback.message.reply(
+            "Спасибо, что оставляете оценку, это поможет нам улучшить сервис! Выберите количество звёзд от 1 до 5.",
+            reply_markup=await review_keyboard(order_id=callback_data[CB_ORDER_ID], is_driver=True),
+        )
+
 
 
 @dp.message_handler(Command("open_ride"), state="*")
@@ -408,6 +423,6 @@ async def get_ride(driver_chat_id: int, state: FSMContext = None):
     order: Order = data.get("ride")
 
     if not order:
-        order = await core.get_active_ride(driver_chat_id=client_chat_id)
+        order = await core.get_active_ride(driver_chat_id=driver_chat_id)
 
     return order

@@ -18,6 +18,7 @@ class OrderAPIMethods:
 
     async def create_order(self, data: dict):
         json_data = parse_order_data_from_state(data)
+        print(json_data, 'json data')
         order_data = await self._create_order(json_data=json_data)
 
         return initialize_order(order_data)
@@ -100,8 +101,8 @@ class OrderAPIMethods:
         )
         return initialize_order(await response.json())
 
-    async def set_order_review(self, order_id, review: OrderReview):
-        json_data = {"order_id": int(order_id), "review": review.dict()}
+    async def set_order_review(self, order_id, review: OrderReview, is_driver):
+        json_data = {"order_id": int(order_id), "review": review.dict(), "is_driver": is_driver}
 
         response = await post_request(
             session=self.session,

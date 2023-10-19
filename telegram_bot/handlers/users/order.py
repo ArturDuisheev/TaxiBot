@@ -23,6 +23,7 @@ from keyboards.inline.order import (
     CB_STARS,
     CREATE_ORDER_REVISION,
     GIVE_REVIEW,
+    IS_DRIVER,
     ORDER_A_TAXI,
     RECREATE_ORDER,
     address_write_inline_keyboard,
@@ -424,13 +425,12 @@ async def pick_order_review_stars_handler(call, state, callback_data: dict = Non
     """
     stars = int(callback_data[CB_STARS])
     order_id = int(callback_data[CB_ORDER_ID])
-
+    is_driver = True if callback_data[IS_DRIVER] == 'True' else False
     await call.message.edit_reply_markup(reply_markup=None)
-
     if stars >= 3:
         # Если оценка нормальная то отправляем на сервер
         review = OrderReview(stars=stars)
-        review = await core.set_order_review(order_id=order_id, review=review)
+        review = await core.set_order_review(order_id=order_id, review=review, is_driver=is_driver)
         await give_present_to_chat_id(chat_id=call.from_user.id, order_id=order_id)
         await main_menu_handler(
             None,
@@ -440,7 +440,7 @@ async def pick_order_review_stars_handler(call, state, callback_data: dict = Non
         )
     else:
         # Если нет, то спрашиваем почему плохая оценка
-        await state.update_data(stars=stars, order_id=order_id)
+        await state.update_data(stars=stars, order_id=order_id, is_driver=is_driver)
         await OrderReviewState.pick_text.set()
         await call.message.answer(
             "Мне жаль, что поездка оказалась неудачной, напишите что именно вас расстроило и мы обязательно сделаем работу над ошибками!"
@@ -452,9 +452,10 @@ async def pick_order_review_text_handler(message, state):
     data = await state.get_data()
     stars = data["stars"]
     order_id = data["order_id"]
+    is_driver = data["is_driver"]
 
     review = OrderReview(stars=stars, text=message.text)
-    review = await core.set_order_review(order_id=order_id, review=review)
+    review = await core.set_order_review(order_id=order_id, review=review, is_driver=is_driver)
     await give_present_to_chat_id(chat_id=message.from_user.id, order_id=order_id)
     await main_menu_handler(message, state, pre_text="Я принял ваш отзыв! Спасибо!\n\n")
 

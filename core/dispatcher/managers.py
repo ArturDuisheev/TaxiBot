@@ -79,7 +79,7 @@ def get_closest_drivers_by_location(
         driver__isnull=False,
         driver__work_days__end_date__gt=time_now,
         location__point__distance_lte=(base_location, D(m=radius)),
-        driver__time_blocked_message_order__gte=time_now,
+        driver__time_blocked_message_order__lt=time_now,
     )
 
     if baby_chair:

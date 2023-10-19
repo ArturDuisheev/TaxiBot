@@ -240,15 +240,26 @@ class UpdateOrderReviewSerializer(serializers.Serializer):
 
     order_id = serializers.IntegerField()
     review = OrderReviewSerializer()
+    is_driver = serializers.BooleanField(default=False)
 
     def create(self, validated_data):
         order_id = validated_data.get("order_id")
         review_raw = validated_data.get("review")
         order = Order.objects.get(pk=order_id)
-        order_review = OrderReview(**review_raw)
-        order_review.save()
-        order.review = order_review
-        order.save()
+        if validated_data.get("is_driver", False):
+            review_raw['client_id'] = order.client.id
+            order_review = OrderReview(**review_raw)
+            order_review.save()
+            order.review = order_review
+            order.save()
+        else:
+            review_raw['driver_id'] = order.driver.driver.id
+            order = Order.objects.get(pk=order_id)
+            order_review = OrderReview(**review_raw)
+            order_review.save()
+            order.review = order_review
+            order.save()
+        
         print("Оставлен отзыв к поездке #", order_id)
         return order_review
 

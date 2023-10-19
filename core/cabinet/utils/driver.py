@@ -90,7 +90,7 @@ def make_driver_active(driver: User):
 
 def _make_driver_active(user: User):
     start = timezone.now()
-    end = start + datetime.timedelta(hours=16)
+    end = start + datetime.timedelta(hours=24)
 
     work_day = WorkDriverDay(start_date=start, end_date=end, driver=user.driver)
     work_day.save()
