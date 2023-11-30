@@ -36,7 +36,10 @@ async def main_menu_keyboard(user: User) -> ReplyKeyboardMarkup:
     if user.driver:
         keyboard.add(KeyboardButton(DRIVER_CABINET))
         keyboard.add(KeyboardButton("Пополнить счет"))
-    keyboard.add(KeyboardButton(CONTACT_DATA))
+        keyboard.add(KeyboardButton(CONTACT_DATA))
+    else:
+        keyboard.add(KeyboardButton(CONTACT_DATA))
+        keyboard.add(KeyboardButton("Я водитель"))
     return keyboard
 
 

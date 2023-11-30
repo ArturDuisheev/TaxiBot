@@ -3,6 +3,7 @@ import logging
 from math import ceil
 from django.conf import settings
 
+from django.db.models import Avg
 from django.db.models import F
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
@@ -453,4 +454,15 @@ class DriverAnalyticsOrderAPIView(APIView):
                 return JsonResponse({"detail": "order is not accepted"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-        
+class GetRaitings(APIView):
+
+    def get(self, request, pk):
+        if request.GET.get('is_driver', False):
+            driver = get_object_or_404(Driver.objects.annotate(Avg('review_list__stars')), pk=pk)
+            rating = driver.review_list__stars__avg
+        else:
+            user = get_object_or_404(User.objects.annotate(Avg('review_list__stars')), pk=pk)
+            rating = user.review_list__stars__avg
+        return Response(data={
+            "rating": rating
+        }, status=status.HTTP_200_OK)

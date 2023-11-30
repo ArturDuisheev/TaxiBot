@@ -2,6 +2,7 @@ from pathlib import Path
 
 from environs import Env
 from dotenv import load_dotenv
+import os
 # Теперь используем вместо библиотеки python-dotenv библиотеку environs
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -9,10 +10,10 @@ env = Env()
 print(env)
 DEBUG = 1
 
-BOT_TOKEN = "6052608761:AAHu8lHJ0ra9kPD5GdSLLjieRISEh5Ufeh4"  # Забираем значение типа str
-DADATA_TOKEN = "09aa69fe647bcfa4a7032a08123a9b9314366ea3"
+BOT_TOKEN = os.getenv("BOT_TOKEN")  # Забираем значение типа str
+DADATA_TOKEN = os.getenv("DADATA_TOKEN")
 ADMINS = [860389338,805964909]  # Тут у нас будет список из админов
-PAY_TOKEN = "1744374395:TEST:4321f20feecaceec93c0"
+PAY_TOKEN = os.getenv("PAY_TOKEN")
 for i in range(len(ADMINS)):
     ADMINS[i] = int(ADMINS[i])
 
@@ -20,7 +21,7 @@ IP = "0.0.0.0"  # Тоже str, но для айпи адреса хоста
 WEB_BOT_URL = "https://t.me/taxiber_testing_bot"
 
 # webhook settings
-CORE_TOKEN = "361672ce8be6e643d8f382f7a14e3a068636c7bc"
+CORE_TOKEN = os.getenv("CORE_TOKEN")
 WEBHOOK_HOST = "localhost"
 # if DEBUG:
 #     WEBHOOK_PATH = '/'+ CORE_TOKEN + '/'
@@ -46,11 +47,11 @@ CORE_TOKEN = CORE_TOKEN
 QIWI_TOKEN =""
 QIWI_PHONE_NUMBER = ""
 
-BASE_URL = "http://77.222.53.158"
+BASE_URL = os.getenv("BASE_URL")
 CORE_BASE_URL = BASE_URL + "/api/"
 CORE_HEADERS = {}
 
-CABINET_LOGIN_URL = "http://77.222.53.158/cabinet/telegram_auth_token_login/%s/"
+CABINET_LOGIN_URL = BASE_URL + "/cabinet/telegram_auth_token_login/%s/"
 
 MEDIA_URL = BASE_DIR / "data/media/"
 ICONS_MEDIA_URL = MEDIA_URL / "telegram_icons"

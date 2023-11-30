@@ -22,6 +22,8 @@ async def bot_start(message: types.Message, state=FSMContext):
         user = None
     if user:
         await message.answer('вы уже зарегистрированы')
+        keyboard = await main_menu_keyboard(user=user)
+        await message.answer(reply_markup=keyboard, text=OPEN_MAIN_MENU)
     else:
         mentor, coupon = await parse_start_args(message.get_args())
         if coupon:

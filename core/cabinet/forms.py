@@ -15,6 +15,8 @@ class Card(Div):
 class CardHeader(Div):
     css_class = "card-header"
 
+class CardDesk(Div):
+    css_class = "card-desk"
 
 class CardBody(Div):
     css_class = "card-body"
@@ -29,6 +31,7 @@ class LayoutMixin:
         super().__init__(*args, **kwargs)
         fields = self.base_fields
         header = self.layout_header if hasattr(self, "layout_header") else "Форма"
+        desk = self.layout_desk if hasattr(self, "layout_desk") else ""
         buttons = (
             self.layout_buttons
             if hasattr(self, "layout_buttons")
@@ -38,6 +41,7 @@ class LayoutMixin:
         self.helper.layout = Layout(
             Card(
                 CardHeader(HTML(f"<h5>{header}</h5>")),
+                CardDesk(HTML(f'<p style="padding-inline: 40px">{desk}</p>')),
                 CardBody(Fieldset(None, *fields)),
                 CardFooter(
                     *buttons,
@@ -55,6 +59,7 @@ class UserForm(LayoutMixin, forms.ModelForm):
     helper.form_method = "post"
 
     layout_header = "Основная информация о пользователе"
+    layout_desk = "Рейтинг пользователя: "
     layout_buttons = [
         Submit("submit__user", "Сохранить", css_class="btn-primary"),
         Submit("delete__user", "Удалить", css_class="btn-secondary"),
@@ -62,6 +67,12 @@ class UserForm(LayoutMixin, forms.ModelForm):
     ]
 
     def __init__(self, *args, **kwargs):
+        if kwargs.get("instance"):
+            rating = kwargs["instance"].review_list__stars__avg if hasattr(kwargs["instance"], "review_list__stars__avg") else 0
+            if rating is None:
+                rating = "Не определен"
+            
+            self.layout_desk += str(rating)
         super().__init__(*args, **kwargs)
         self.fields["user_permissions"].queryset = Permission.objects.exclude(
             codename__in=EXCLUDED_PERMISSION_FROM_ADMIN_FORM

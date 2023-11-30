@@ -30,11 +30,11 @@ async def payment_complete(message: types.Message, state: FSMContext):
         return
     # Для теста товары будут в этой функции, на проде необходим отдельный файл
     PRICE = [types.LabeledPrice(label="Оплата за сервис", amount=price * 100)]
-    await bot.send_invoice(chat_id=message.chat.id, title="Оплата",
+    await bot.send_invoice(chat_id=message.from_user.id, title="Оплата",
                            description="1", provider_token=PAY_TOKEN,
                            currency='rub', is_flexible=False,
                            prices=PRICE, start_parameter='1',
-                           payload='1', provider_data=None,
+                           payload='1',
                            need_shipping_address=False
                            )
     await state.finish()

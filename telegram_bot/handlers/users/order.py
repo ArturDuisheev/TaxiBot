@@ -340,12 +340,13 @@ async def address_inline_handler(inline_query: types.InlineQuery, state: FSMCont
     """
     Автозаполняет адреса
     """
+    print('queiry_comm')
     try:
         results = await get_autocompletion_inline_results(inline_query.query)
     except Exception as E:
         results = []
         logging.warning(E.args)
-
+    print('queiry_comm')
     cache_time = 1000
     await bot.answer_inline_query(
         inline_query.id, results=results, cache_time=cache_time

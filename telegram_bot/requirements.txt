@@ -13,6 +13,7 @@ humanfriendly==9.1
 idna==2.10
 marshmallow==3.10.0
 multidict==5.1.0
+numpy==1.26.1
 parse==1.19.0
 phonenumberslite==8.12.21
 pydantic==1.8.1

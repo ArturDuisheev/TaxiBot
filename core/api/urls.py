@@ -24,6 +24,7 @@ from dispatcher.api import (
     get_price_api_view,
     set_order_review,
     GetMapCenterAPIView, GetActiveOrderByTelegramAuthToken,
+    GetRaitings
 )
 from django.urls import path
 from referral.api import get_present_from_order, pick_coupon_from_telegram
@@ -43,6 +44,7 @@ urlpatterns = [
     path("users/outOnTheLineDriver/", OutOnTheLineDriver.as_view()),
     path("users/finishWorkDay/", finish_driver_work_day),
     path("users/updateUser/<int:pk>/", UpdateUserAPIView.as_view()),
+    path("users/getRaitings/<int:pk>/", GetRaitings.as_view()),
 
     path("orders/createOrder/", CreateOrderAPI.as_view()),
     path("orders/reCreateOrder/", ReCreateOrderAPI.as_view()),

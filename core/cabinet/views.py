@@ -1,5 +1,6 @@
 import logging
 
+from django.db.models import Avg
 from django.conf import settings as config
 from django.contrib import messages
 from django.contrib.auth import login, logout
@@ -137,7 +138,7 @@ def user_detail_view(request: HttpRequest, pk: int):
     user = get_object_or_404(
         User.objects.select_related(
             "driver", "balance", "telegram_data", "driver__car", "driver__car__brand"
-        ),
+        ).annotate(Avg('review_list__stars')),
         pk=pk,
     )
     logging.info(f"Пользователь получен из базы данных {user.pk=}")
