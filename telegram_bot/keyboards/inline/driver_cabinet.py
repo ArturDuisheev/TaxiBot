@@ -23,16 +23,7 @@ async def driver_cabinet_keyboard(
     Возвращает инлайн клавиатуру для выбора скидочного купона при оформлении заказа
     """
     keyboard = InlineKeyboardMarkup(row_width=1)
-    if out_line_cost:
-        payment_url = pyqiwi.generate_form_link(
-            pid=99,
-            account=qiwi.number,
-            amount=200 if not out_line_cost else out_line_cost,
-            comment=user.id,
-            blocked=["account", "comment"],
-        )
-        keyboard.add(InlineKeyboardButton(TOP_UP_BALANCE, url=payment_url))
-
+    keyboard.add(InlineKeyboardButton(TOP_UP_BALANCE, callback_data="add_balance"))
     if user.driver.is_active:
         keyboard.add(
             InlineKeyboardButton(FINISH_WORK_DAY, callback_data=cb.new(FINISH_WORK_DAY))

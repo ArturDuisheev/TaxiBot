@@ -13,16 +13,19 @@ from utils.phone_numbers import validate_phone_number
 from data.config import PAY_TOKEN
 
 
-@dp.message_handler(text="Пополнить счет")
+@dp.callback_query_handler(lambda x: x.data == "add_balance")
 @authenticate(fields=["driver"], extended=True)
-async def payment_start(message: types.Message, state: FSMContext):
+async def payment_start(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(DriverPayment.price)
-    await message.answer("Введите сумму пополнения")
+    await callback.message.answer("Введите сумму пополнения")
 
 @dp.message_handler(state=DriverPayment.price)
 async def payment_complete(message: types.Message, state: FSMContext):
     try:
         price = int(message.text)
+        if price < 100:
+            await message.answer("Введенной число меньше 100")
+            return
     except:
         await state.set_state(DriverPayment.price)
         await message.answer("Введенное сообщение, не число. Введите сумму пополнения заново")
@@ -31,7 +34,7 @@ async def payment_complete(message: types.Message, state: FSMContext):
     # Для теста товары будут в этой функции, на проде необходим отдельный файл
     PRICE = [types.LabeledPrice(label="Оплата за сервис", amount=price * 100)]
     await bot.send_invoice(chat_id=message.from_user.id, title="Оплата",
-                           description="1", provider_token=PAY_TOKEN,
+                           description="Оплата за сервис", provider_token=PAY_TOKEN,
                            currency='rub', is_flexible=False,
                            prices=PRICE, start_parameter='1',
                            payload='1',

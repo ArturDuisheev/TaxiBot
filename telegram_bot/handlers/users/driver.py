@@ -124,6 +124,7 @@ async def driver_cabinet_handler(
         await callback_query.message.answer(
             message_text
             + "\n\n⚠️ ОБЯЗАТЕЛЬНО ПРИШЛИТЕ МНЕ «ТРАНСЛЯЦИЮ ВАШЕЙ ГЕОПОЗИЦИИ» на 8 часов, иначе я не смогу присылать вам заказы!"
+              " Сделать это можно нажав снизу на скрепку -> геопозиция -> транслировать мою геопозицию "
         )
         callback_query.message.user = user
         await open_driver_cabinet_handler(callback_query.message, update_message=True)
@@ -230,12 +231,19 @@ async def new_order_callback_handler(
         
         # Открываем меню заказа для водителя
         await open_ride(state=state, base_message=callback.message)
+        await bot.pin_chat_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+        await state.update_data(order_message_id=callback.message.message_id)
 
     elif callback_data[CB_ACTION] == CANCEL_ORDER:
         # Отмена заказа водителем
         order: Order = await get_ride(driver_chat_id=callback.from_user.id, state=state)
         await cancel_order(order, status=ORDER_CANCELED_BY_DRIVER)
         await callback.message.edit_reply_markup(reply_markup=None)
+        data = await state.get_data()
+        try:
+            await bot.unpin_chat_message(chat_id=callback.from_user.id, message_id=data['order_message_id'])
+        except:
+            ...
     
     elif callback_data[CB_ACTION] == GIVE_REVIEW:
         # Если пользователь нажал "Оценить поездку"
@@ -369,6 +377,11 @@ async def update_order_status_callback_handler(
         client_pre_text = t.THE_RIDE_IS_STARTED_HAVE_A_NICE_TRIP + "\n\n"
     if status == RIDE_IS_FINISHED:
         # Если поездка завершена
+        data = await state.get_data()
+        try:
+            await bot.unpin_chat_message(chat_id=callback.from_user.id, message_id=data['order_message_id'])
+        except:
+            ...
         client_pre_text = t.THE_DRIVE_IS_FINISHED + "\n\n"
     await open_order(
         state=client_state,
@@ -380,6 +393,11 @@ async def update_order_status_callback_handler(
     )
 
     if status == RIDE_IS_FINISHED:
+        data = await state.get_data()
+        try:
+            await bot.unpin_chat_message(chat_id=callback.from_user.id, message_id=data['order_message_id'])
+        except:
+            ...
         await main_menu_handler(
             None, state=client_state, chat_id=order.client.telegram_data.chat_id
         )

@@ -1,9 +1,13 @@
+import re
 from os import remove as remove_file
+
+from aiogram.utils.callback_data import CallbackData
+
 from data.texts import OPEN_MAIN_MENU
 from aiogram.dispatcher import FSMContext
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
-from data.config import ICONS_MEDIA_URL
+from data.config import ICONS_MEDIA_URL, ADMINS
 from data.texts import HELLO_STICKER_ID, START_NEW_USER, START_OLD_USER
 from handlers.users.main_menu import main_menu_handler
 from loader import bot, core, dp
@@ -11,7 +15,7 @@ from keyboards.default.main_menu import main_menu_keyboard, register_keyboard
 from states.driver import DriverRegister
 from utils.to_format import driver_data_state_to_data_core
 from utils.exceptions import UserIsRegistered
-
+from states.help import HelpState
 
 @dp.message_handler(CommandStart(), state="*")
 async def bot_start(message: types.Message, state=FSMContext):
@@ -54,7 +58,11 @@ async def bot_start(message: types.Message, state=FSMContext):
             text = START_OLD_USER.format(name=message.from_user.first_name)
         await message.answer_sticker(HELLO_STICKER_ID)
 
-        await message.answer('подтвердите ознакомление с офертой (Подтверждаю, Нет)')
+        await message.answer('подтвердите ознакомление с офертой (Подтверждаю, Нет)',
+                             reply_markup=types.ReplyKeyboardMarkup([[
+                                 types.KeyboardButton("подтверждаю"),
+                                 types.KeyboardButton("нет")
+                             ]]))
         await message.reply_document(open("data/static/oferta.doc", 'rb'))
         await state.set_state(DriverRegister.oferta)
 
@@ -64,7 +72,7 @@ async def bot_start(message: types.Message, state=FSMContext):
 
 @dp.message_handler(state=DriverRegister.oferta)
 async def register(message: types.Message, state=FSMContext):
-    if message.text != 'Подтверждаю':
+    if message.text.lower() != 'подтверждаю' and message.text.lower() != "да":
         await message.answer('Без подтверждения ознакомления с офертой, мы не можем вас зарегистрировать')
         await state.set_state(DriverRegister.oferta)
         return
@@ -111,9 +119,12 @@ async def register_driver(message: types.Message, state="*"):
 
 @dp.message_handler(state=DriverRegister.car_number)
 async def register_driver(message: types.Message, state="*"):
-    await state.update_data(car_number=message.text)
-    await state.set_state(DriverRegister.car_color)
-    await message.answer('укажите цвет вашей машины')
+    if not re.match(r"[АВЕКМНОРСТУХ]\d{3}(?<!000)[АВЕКМНОРСТУХ]{2}\d{2,3}", message.text.upper()):
+        await message.answer("номер машины не валиден, пример х777хх77")
+    else:
+        await state.update_data(car_number=message.text)
+        await state.set_state(DriverRegister.car_color)
+        await message.answer('укажите цвет вашей машины')
 
 
 
@@ -147,13 +158,17 @@ async def register_driver(message: types.Message, state=FSMContext):
 @dp.message_handler(state=DriverRegister.baby_chair)
 async def register_driver(message: types.Message, state=FSMContext):
     await state.update_data(baby_chair=message.text)
-    await message.answer('подтвердите ознакомление с офертой (Подтверждаю, Нет)')
+    await message.answer('подтвердите ознакомление с офертой (Подтверждаю, Нет)',
+                             reply_markup=types.ReplyKeyboardMarkup([[
+                                 types.KeyboardButton("подтверждаю"),
+                                 types.KeyboardButton("нет")
+                             ]]))
     await message.reply_document(open("data/static/oferta.doc", 'rb'))
     await state.set_state(DriverRegister.photo)
 
 @dp.message_handler(state=DriverRegister.photo)
 async def register_driver(message: types.Message, state=FSMContext):
-    if message.text != 'Подтверждаю':
+    if message.text.lower() != 'подтверждаю' and message.text.lower() != "да":
         await message.answer('Без подтверждения ознакомления с офертой, мы не можем вас зарегистрировать')
         await state.set_state(DriverRegister.photo)
         return
@@ -164,11 +179,9 @@ async def register_driver(message: types.Message, state=FSMContext):
         user_data=data,
     )
     if status:
-        await message.answer(f"Вы успешно зарегистрировались!")
         user = await core.get_user_by_chat_id(chat_id=message.from_user.id)
-        await main_menu_handler(
-        message, state, pre_text="", user=user, base_text=""
-    )
+        await message.answer(f"Вы успешно зарегистрировались!", reply_markup=await main_menu_keyboard(user=user))
+
     else:
         await message.answer(f"Регистрация не удалось. Попробуйте еще раз")
 
@@ -215,3 +228,29 @@ async def register_user(message: types.Message, state=None):
 
         if user_photo:
             remove_file(user_photo.name)
+
+
+@dp.callback_query_handler(lambda x: x.data == "cancel_helps")
+async def cancel_help(callback: types.CallbackQuery, state: FSMContext):
+    await state.finish()
+    await callback.message.answer("Отменено")
+    await main_menu_handler("", chat_id=callback.from_user.id)
+
+@dp.message_handler(text="Помощь")
+async def help(message: types.Message, state: FSMContext):
+    await state.set_state(HelpState.text)
+    await message.answer("Напишите свою проблему и мы обязательно вам поможем. "
+                         "Если вы нажали кнопку случайно, напишите слово, Отменить")
+
+
+@dp.message_handler(state=HelpState.text)
+async def text_help(message: types.Message, state: FSMContext):
+    if message.text.lower() == "отменить":
+        await message.answer("Отменено")
+        await state.finish()
+        return
+    for admin in ADMINS:
+        await bot.send_message(admin, f"Пользователь: @{message.from_user.username} "
+                                      f"написал в поддержку с сообщением - {message.text}")
+    await message.answer("Ваше сообщение было отправлено, скоро с вами свяжутся")
+    await state.finish()

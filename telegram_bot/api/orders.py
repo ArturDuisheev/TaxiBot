@@ -1,3 +1,5 @@
+import json
+
 from models.dispatcher import initialize_order, OrderReview
 from .utils import post_request, parse_order_data_from_state, patch_request
 
@@ -8,6 +10,7 @@ class OrderAPIMethods:
     """
 
     async def _create_order(self, json_data: dict):
+        print(json.dumps(json_data), 12321312)
         response = await post_request(
             session=self.session,
             url=self.base_url() + "orders/createOrder/",

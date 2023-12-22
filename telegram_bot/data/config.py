@@ -4,7 +4,7 @@ from environs import Env
 from dotenv import load_dotenv
 import os
 # Теперь используем вместо библиотеки python-dotenv библиотеку environs
-
+load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 env = Env()
 print(env)
@@ -12,7 +12,7 @@ DEBUG = 1
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")  # Забираем значение типа str
 DADATA_TOKEN = os.getenv("DADATA_TOKEN")
-ADMINS = [860389338,805964909]  # Тут у нас будет список из админов
+ADMINS = [805964909, 1143520926]  # Тут у нас будет список из админов
 PAY_TOKEN = os.getenv("PAY_TOKEN")
 for i in range(len(ADMINS)):
     ADMINS[i] = int(ADMINS[i])
@@ -58,8 +58,8 @@ ICONS_MEDIA_URL = MEDIA_URL / "telegram_icons"
 LOGGING_FILE_PATH = BASE_DIR / "data" / "logs" / "logging.log"
 
 
-REDIS_NAME = "localhost"
-REDIS_PORT = 6379
+REDIS_NAME = "77.222.37.151"
+REDIS_PORT = 6380
 REDIS_LOCATION_DB = 1
 REDIS_FSM_DB = 2
 # !!! 3 db number занят ядром, если находятся на одном сервере

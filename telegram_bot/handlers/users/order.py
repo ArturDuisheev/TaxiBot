@@ -191,7 +191,7 @@ async def send_preorder(chat_id, order, state=None):
             )
 
 
-@dp.message_handler(text=ORDER_A_TAXI)
+@dp.message_handler(lambda x: x.text.lower() == ORDER_A_TAXI.lower() or x.text.lower() == "заказать" or x.text.lower() == "заказать такси")
 @authenticate()
 async def order_taxi_handler(message):
     # Пробуем открыть заказ, не отправляем сообщение о том, что заказ не найден
